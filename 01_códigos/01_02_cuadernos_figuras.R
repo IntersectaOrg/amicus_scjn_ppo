@@ -1,14 +1,16 @@
 #------------------------------------------------------------------------------#
 # Proyecto:              AMICUS para la SCJN sobre prisión preventiva oficiosa  
-# Objetivo:              Procesar 
+# Objetivo:              Procesar datos y generar figuras de Cuaderno Mensual 
+#                        de Información Estadística Penitenciaria Nacional 
 #
 # Encargadas:            Coordinación de datos de Intersecta
 # 
-# Fecha de creación:     06 de diciembre de 2021 (códigos originales)
-# Última actualización:  31 de agosto de 2021 (código amicus)
+# Fecha de creación:     29 de agosto de 2022
+# Última actualización:  31 de agosto de 2022 
 #------------------------------------------------------------------------------#
 
-# Fuente: https://www.inegi.org.mx/programas/enpol/2021/#Microdatos
+# Fuente: 
+# https://www.gob.mx/prevencionyreadaptacion/documentos/cuaderno-mensual-de-informacion-estadistica-penitenciaria-nacional?idiom=es
 
 # 0. Configuración inicial -----------------------------------------------------
 
@@ -29,7 +31,6 @@ paste_code  <- function(x){paste0("01_códigos/"                                
 paste_inp   <- function(x){paste0("02_datos_crudos/01_cuadernos_estadística_penitenciaria/" , x)}
 paste_out   <- function(x){paste0("03_datos_limpios/01_cuadernos_estadística_penitenciaria/", x)}
 paste_fig   <- function(x){paste0("04_figuras/"                                  , x)}
-
 
 
 # 1. Cargar datos --------------------------------------------------------------
@@ -80,7 +81,7 @@ v_rojos     <- c("#E23E57", "#88304E", "#522546", "#311D3F")
 v_azules    <- c("#E9D5DA", "#827397", "#4D4C7D", "#363062")
 
 
-## 3.1. Muertes por año total --------------------------------------------------------------
+## 3.1. Muertes por año total --------------------------------------------------
 
 df_year <- df_incidentes %>% 
     filter(evento == "Decesos")     %>% 
@@ -194,7 +195,7 @@ ggplot(
 #        width = 6, height = 4)
 
 
-## 3.2. Muertes por estatus anual --------------------------------------------------------------
+## 3.2. Muertes por estatus anual ----------------------------------------------
 
 df_data <- df_sitjurid                      %>% 
     filter(evento == "Decesos")             %>% 
