@@ -1,4 +1,4 @@
-![Build Status](https://img.shields.io/github/stars/IntersectaOrg/amicus_scjn_ppo)
+![Build Status](https://img.shields.io/github/stars/IntersectaOrg/amicus_scjn_ppo?style=flat-square)
 
 <p align="center">
 <img src = "logo.jpg" alt="foo" width="300">
