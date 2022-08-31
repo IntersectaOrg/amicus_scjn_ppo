@@ -8,32 +8,42 @@
 # Última actualización:  31 de agosto de 2021
 #------------------------------------------------------------------------------#
 
-# 0. Configuración inicial ------------------------------------------------
+# 0. Configuración inicial -----------------------------------------------------
 
-# Silenciar mensajes de .group en dplyr
+# ---- Silenciar mensajes de .group en dplyr
 options(dplyr.summarise.inform = FALSE)
 
-# Silenciar warnings 
+# ---- Silenciar warnings 
 options(warn=-1)
 
-# Cargar librerías 
+# ---- Cargar librerías 
 require(pacman)
 p_load(srvyr, tidyverse, dplyr, lubridate, scales)
 
-# Limpiar espacio de trabajo 
+# ---- Limpiar espacio de trabajo 
 rm(list=ls())
 
-# Eliminar notación científica 
+# ---- Eliminar notación científica 
 options(scipen=999)
 
-# Método para el caso de 1 UPM en los estratos
+# ---- Método para el caso de 1 UPM en los estratos
 options(survey.adjust.domain.lonely=TRUE)
 options(survey.lonely.psu="adjust")
 
+# ---- Funciones de directorios
+paste_code  <- function(x){paste0("01_códigos/04_enpol/"      , x)}
+paste_inp   <- function(x){paste0("02_datos_crudos/04_enpol/" , x)}
+paste_data  <- function(x){paste0("03_datos_limpios/04_enpol/", x)}
+paste_figs  <- function(x){paste0("04_figuras/"               , x)}
+
+
 # 1. Cargar datos --------------------------------------------------------------
 
-# ENPOL 2021
-# Base de datos disponible en https://www.inegi.org.mx/programas/enpol/2021/#Microdatos
+# ---- ENPOL 2021
+# Bases de datos originales disponible en
+# https://www.inegi.org.mx/programas/enpol/2021/#Microdatos
+
+load(paste_data("df_ENPOL_2021.RData"))
 
 # 2. Funciones -----------------------------------------------------------------
 
@@ -173,6 +183,7 @@ df_limpio <- df_ENPOL_2021                       %>%
         g_edad      = codificar_edad(edad),
         escolaridad = codificar_escolaridad(P1_18_N),
         ingresos    = codificar_ingresos(P2_15),
+        lugar       = codificar_lugar(P7_29),
         gasto = as.numeric(as.character(P7_30))
         )  %>%
     mutate(
@@ -223,12 +234,10 @@ tema <-  theme_void() +
 
 # ---- Colores
 
-v_colors <- c("#e23e57", "#88304e", "#522546", "#311d3f",
-                    "#e9d5da", "#827397", "#4d4c7d", "#363062")
-
-v_azules <- c("#e9d5da", "#827397", "#4d4c7d", "#363062")
-
-v_rojos <- c("#e23e57", "#88304e", "#522546", "#311d3f")
+v_colors            <- c("#e23e57", "#88304e", "#522546", "#311d3f", 
+                         "#e9d5da", "#827397", "#4d4c7d", "#363062")
+v_colors_blue       <- c("#e9d5da", "#827397", "#4d4c7d", "#363062")
+v_colors_red        <- c("#e23e57", "#88304e", "#522546", "#311d3f")
 
 # ----Formato para gráficas
 
@@ -281,7 +290,7 @@ ggplot(df_data,
           axis.title.x = element_text(angle = 0))
 
 ggsave(
-    file = paste0("04_edad_persona_pp", v_formato), 
+    file = paste_figs("04_edad_persona_pp.png"), 
     device = "png", type = "cairo", 
     width = 6, height = 4)
 
@@ -332,7 +341,7 @@ ggplot(df_data,
           axis.title.x = element_text(angle = 0))
 
 ggsave(
-    file = paste0("05_escolaridad_personas_pp", v_formato), 
+    file = paste_figs("05_escolaridad_personas_pp.png"), 
     device = "png", type = "cairo", 
     width = 6, height = 4)
 
@@ -383,7 +392,7 @@ ggplot(df_data,
           axis.text.y = element_text(size = 5.5))
 
 ggsave(
-    file = paste0("06_ingresos_personas_pp", v_formato), 
+    file = paste_figs("06_ingresos_personas_pp.png"), 
     width = 6, height = 4)
 
 ## 5.5. Acceso a servicios (P6_10) ----------------------------------------
@@ -451,7 +460,7 @@ ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje), fill = "#118a
     theme(axis.text.x = element_text(angle = 0))
 
 ggsave(
-    file = paste0("07_servicios_personas_pp", v_formato), 
+    file = paste_figs("07_servicios_personas_pp.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
 ## 5.6. Violencia (P7_40) ------------------------------------------------------
@@ -526,7 +535,7 @@ ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje))) +
     facet_grid(~sexo)
 
 ggsave(
-    file = paste0("10_violencia_personas_pp", v_formato), 
+    file = paste_figs("10_violencia_personas_pp.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
 ## 5.7. Lugar donde reside la visita (P7_29) -----------------------------------
@@ -567,7 +576,7 @@ ggplot(df_data,
     theme(axis.text.x = element_text(angle = 0))
 
 ggsave(
-    file = paste0("11_residencia_personas_pp", v_formato), 
+    file = paste_figs("11_residencia_personas_pp.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
 ## 5.8. Gasto por visita -------------------------------------------------------
@@ -582,10 +591,10 @@ df_data <- df_encuesta                          %>%
     mutate(gasto = as.integer(gasto))           %>% 
     mutate(gasto_clas = case_when(
         (gasto <= 100) ~ "Menos de $100",
-        (gasto > 100 & gasto <= 500) ~ "De $101 a $500",
-        (gasto > 500 & gasto <= 1000) ~ "De $501 a $1,000",
-        (gasto > 1000 & gasto <= 5000) ~ "De $1,001 a $5,000",
-        (gasto > 5000 & gasto <= 10000) ~ "Más de $5,000",
+        (gasto > 100   & gasto <= 500) ~ "De $101 a $500",
+        (gasto > 500   & gasto <= 1000) ~ "De $501 a $1,000",
+        (gasto > 1000  & gasto <= 5000) ~ "De $1,001 a $5,000",
+        (gasto > 5000  & gasto <= 10000) ~ "Más de $5,000",
         (gasto > 10000 & gasto <= 20000) ~ "Más de $5,000",
         (gasto > 20000) ~ "Más de $5,000"
     )) %>% 
@@ -628,7 +637,7 @@ ggplot(df_data, aes(x = gasto_clas, y = porcentaje)) +
     scale_x_discrete(labels = scales::wrap_format(15))
 
 ggsave(
-    file = paste0("12_gasto_visitas", v_formato), 
+    file = paste_figs("12_gasto_visitas.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
 ## 5.9. Ayuda proporcionada por la visita  (P7_28) -----------------------------
@@ -680,7 +689,7 @@ df_data <- df_data %>%
 ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje))) +
     geom_col(fill = "#4d4c7d")+ 
     geom_label(aes(
-        label=paste0(round(porcentaje,3)*100, "%"), group = tipo),
+        label = paste0(round(porcentaje,3)*100, "%"), group = tipo),
         position = position_stack(1), size=2, hjust=.5, vjust=.5, 
         angle = 0, fill = "white",
         color="black",  family = "Fira Sans") +
@@ -700,6 +709,7 @@ ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje))) +
     theme(axis.text.x = element_text(angle = 0))
 
 ggsave(
-    file = paste0("13_articulos_visitas", v_formato), 
+    file = paste_figs("13_articulos_visitas.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
-
+ 7
+# FIN. -------------------------------------------------------------------------
