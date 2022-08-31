@@ -1,4 +1,6 @@
-![Build Status](https://img.shields.io/github/stars/IntersectaOrg/amicus_scjn_ppo?style=flat-square)
+![Build Status](https://img.shields.io/static/v1?label=Autoría&message=Intersecta&color=ff69b4&style=flat-square) ![Build Status](https://img.shields.io/github/stars/IntersectaOrg/amicus_scjn_ppo?style=flat-square) ![Build Status](https://img.shields.io/github/directory-file-count/IntersectaOrg/amicus_scjn_ppo) ![Build Status](https://img.shields.io/tokei/lines/github/IntersectaOrg/amicus_scjn_ppo)
+
+
 
 <p align="center">
 <img src = "logo.jpg" alt="foo" width="300">
