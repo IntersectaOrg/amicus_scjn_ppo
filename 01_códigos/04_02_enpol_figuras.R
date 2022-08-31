@@ -1,12 +1,12 @@
 #------------------------------------------------------------------------------#
 # Proyecto:              AMICUS para la SCJN sobre prisión preventiva oficiosa  
-# Objetivo:              Procesar datos de la Encuesta Nacional de Población 
-#                        Privada de la Libertad (ENPOL) 2021
+# Objetivo:              Procesar datos y generar figuras de la Encuesta 
+#                        Nacional de Población Privada de la Libertad (ENPOL) 
 #
 # Encargadas:            Coordinación de datos de Intersecta
 # 
 # Fecha de creación:     06 de diciembre de 2021 (códigos originales)
-# Última actualización:  31 de agosto de 2021 (código amicus)
+# Última actualización:  31 de agosto    de 2022 (código amicus)
 #------------------------------------------------------------------------------#
 
 # Fuente: https://www.inegi.org.mx/programas/enpol/2021/#Microdatos
@@ -991,4 +991,3 @@ ggsave(
     width = 6, height = 4, device = "png", type = "cairo")
 
 # FIN. -------------------------------------------------------------------------
-♠
