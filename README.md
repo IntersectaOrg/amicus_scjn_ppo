@@ -2,8 +2,8 @@
 ![Build Status](https://img.shields.io/github/stars/IntersectaOrg/amicus_scjn_ppo?&color=yellow)
 ![Build Status](https://img.shields.io/github/directory-file-count/IntersectaOrg/amicus_scjn_ppo) 
 ![Build Status](https://img.shields.io/tokei/lines/github/IntersectaOrg/amicus_scjn_ppo)
-
-
+![Build Status](https://img.shields.io/twitter/follow/intersectaorg?style=social)
+![Build Status](https://img.shields.io/github/followers/IntersectaOrg?style=social)
 
 <p align="center">
 <img src = "logo.jpg" alt="foo" width="300">
