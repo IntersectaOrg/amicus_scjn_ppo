@@ -174,23 +174,42 @@ codificar_siono4o <- function(var = x){
 
 ## 3.1. Usar las funciones para recodificar las variables ----------------------
 df_limpio <- df_ENPOL_2021                       %>% 
+    # Convertir edad en valor numérico
     mutate(
-        # Convertir edad en valor numérico
         edad = as.numeric(as.character(P1_3))
     ) %>% 
+    # Recodificar variables
     mutate(
-        # Recodificar variables
         g_edad      = codificar_edad(edad),
         escolaridad = codificar_escolaridad(P1_18_N),
         ingresos    = codificar_ingresos(P2_15),
         lugar       = codificar_lugar(P7_29),
         gasto = as.numeric(as.character(P7_30))
         )  %>%
+    # Recodificar sexo
     mutate(
-        # Recodificar sexo
         sexo = case_when(
             SEXO == 1 ~ "Hombres", 
             SEXO == 2 ~ "Mujeres")) %>% 
+    # Crear variable de disrciminación
+    mutate(
+        discriminacion = 
+            case_when(
+                (P7_46_01 == "1" | P7_46_02 == "1" | P7_46_03 == "1" |
+                     P7_46_04 == "1" | P7_46_05 == "1" | P7_46_06 == "1" |
+                     P7_46_07 == "1" | P7_46_08 == "1" | P7_46_09 == "1" | 
+                     P7_46_10 == "1" | P7_46_11 == "1" | P7_46_12 == "1" |
+                     P7_46_13 == "1" | P7_46_14 == "1") ~ "Sí",
+                TRUE ~ "No",
+                (P7_46_01 %in% c("8", "9") & P7_46_02 %in% c("8", "9") & 
+                     P7_46_03 %in% c("8", "9") & P7_46_04 %in% c("8", "9") & 
+                     P7_46_05 %in% c("8", "9") & P7_46_06 %in% c("8", "9") &
+                     P7_46_07 %in% c("8", "9") & P7_46_08 %in% c("8", "9") & 
+                     P7_46_09 %in% c("8", "9") & P7_46_10 %in% c("8", "9") & 
+                     P7_46_11 %in% c("8", "9") & P7_46_12 %in% c("8", "9") &
+                     P7_46_13 %in% c("8", "9") & P7_46_14 %in% c("8", "9")) ~ NA_character_
+            )
+    ) %>% 
     # Filtrar a personas en prisión preventiva
     filter(P5_3 == 1)
 
@@ -209,7 +228,7 @@ df_encuesta <- df_limpio                        %>%
 
 # 5. Gráficas ------------------------------------------------------------------
 
-## 5.1. Tema -------------------------------------------------------------------
+## 5.00. Tema ------------------------------------------------------------------
 
 # ---- Tema para gráficas 
 tema <-  theme_void() +
@@ -233,19 +252,15 @@ tema <-  theme_void() +
         strip.text.y     = element_text(size=9, family = "Fira Sans", face = "bold", color = "black"))
 
 # ---- Colores
-
-v_colors            <- c("#e23e57", "#88304e", "#522546", "#311d3f", 
-                         "#e9d5da", "#827397", "#4d4c7d", "#363062")
 v_colors_blue       <- c("#e9d5da", "#827397", "#4d4c7d", "#363062")
 v_colors_red        <- c("#e23e57", "#88304e", "#522546", "#311d3f")
+v_colors            <- c("#e23e57", "#88304e", "#522546", "#311d3f", 
+                         "#e9d5da", "#827397", "#4d4c7d", "#363062")
 
 # ----Formato para gráficas
-
 v_formato <- ".png"
 
-
 # ---- Etiquetas
-
 v_caption       <- "\nFuente: Encuesta Nacional de Población Privada de la Libertad 2021 (ENPOL). 
 Datos procesados por Intersecta (intersecta.org)\n"
 
@@ -254,7 +269,7 @@ v_empty         <- ""
 v_sexo          <- "Por sexo\n"
 
 
-## 5.2. Edad -------------------------------------------------------------------
+## 5.01. Edad ------------------------------------------------------------------
 
 v_title     <- "En México, a las personas en prisión preventiva,\n¿qué edad tienen?\n"
 
@@ -264,7 +279,6 @@ df_data <- df_encuesta                      %>%
     # Estimar el porcentaje de personas con intervalos de confianza
     srvyr::summarise(
         porcentaje = survey_mean(na.rm = T, vartype = "ci", level = 0.95))
-
 
 # Gráfica 
 ggplot(df_data,
@@ -294,7 +308,7 @@ ggsave(
     device = "png", type = "cairo", 
     width = 6, height = 4)
 
-## 5.3. Escolaridad ------------------------------------------------------------
+## 5.02. Escolaridad -----------------------------------------------------------
 
 v_title     <- "¿Cuál es la escolaridad de las personas\nen prisión preventiva en México?"
 
@@ -345,13 +359,13 @@ ggsave(
     device = "png", type = "cairo", 
     width = 6, height = 4)
 
-## 5.4. Ingresos ---------------------------------------------------------------
+## 5.03. Ingresos --------------------------------------------------------------
 
 v_title     <- "¿Cuánto ganaron en el mes previo a su detención las\npersonas en prisión preventiva en México?"
 
 # Con paquete srvyr (estimar porcentaje)
 df_data <- df_encuesta                      %>%
-    srvyr::group_by(ingresos)               %>%
+    srvyr::group_by(sexo, ingresos)         %>%
     # Estimar el porcentaje de personas con intervalos de confianza
     srvyr::summarise(
         prop = survey_mean(na.rm = T, vartype = "ci", level = 0.95)) %>% 
@@ -371,7 +385,7 @@ df_data <- df_encuesta                      %>%
 ggplot(df_data,
        # Coordenadas y geoms
        aes(x = porcentaje, y = ingresos)) +
-    geom_col(fill = "#4d4c7d") +
+    geom_col(aes(fill = sexo)) +
     geom_label(aes(label=paste0(round(porcentaje,3)*100, "%"), group = ingresos),
                position = position_stack(1), size=2, hjust=.5, vjust=.5, angle = 0, fill = "white",
                color="black",  family = "Fira Sans") +
@@ -379,23 +393,25 @@ ggplot(df_data,
     labs(
         title    = v_title, 
         subtitle = v_empty, 
-        x        = v_percent, 
+        x        = v_empty, 
         y        = v_empty,
         caption  = v_caption) +
     # Tema 
     tema +
     guides(fill = "none") +
+    scale_fill_manual(values = v_colors_blue) +
     scale_x_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 0.3)) +
     scale_y_discrete(labels = scales::wrap_format(25)) +
     theme(axis.text.x = element_text(angle = 0),
           axis.title.x = element_text(angle = 0),
-          axis.text.y = element_text(size = 5.5))
+          axis.text.y = element_text(size = 5.5)) +
+    facet_grid(~sexo)
 
 ggsave(
     file = paste_figs("06_ingresos_personas_pp.png"), 
     width = 6, height = 4)
 
-## 5.5. Acceso a servicios (P6_10) ----------------------------------------
+## 5.04. Acceso a servicios (P6_10) --------------------------------------------
 
 v_title <- "En México, ¿qué les proporciona el centro penitenciario\na las personas en prisión preventiva?"
 
@@ -463,7 +479,88 @@ ggsave(
     file = paste_figs("07_servicios_personas_pp.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
-## 5.6. Violencia (P7_40) ------------------------------------------------------
+## 5.05. Tipo de discriminación (P7_46) ----------------------------------------
+
+v_title <- "Motivos por los que las personas en prisión preventiva 
+han tenido problemas de trato diferente, rechazo o maltrato"
+
+
+v_codes <- c("P7_46_01", "P7_46_02", "P7_46_03", "P7_46_04", "P7_46_05", "P7_46_06", 
+             "P7_46_07", "P7_46_08", "P7_46_09", "P7_46_10", "P7_46_11", "P7_46_12",
+             "P7_46_13")
+v_tipod <- c("Edad", "Color de piel", "Otros rasgos físicos", "Enfermedad", "Discapacidad",
+             "Lengua o idioma", "Ser indígena o afrodescendiente", "Orientación sexual",
+             "Identidad de género", "Religión", "Situación económica", 
+             "Delito cometido", "Por haber pertenecido a las fuerzas armadas")
+
+# ---- Por sexo
+
+df_data <- df_encuesta                                                      %>%
+    filter(discriminacion == "Sí")                                          %>%
+    rename(respuesta = v_codes[1])                                          %>%
+    select(sexo, respuesta)                                                 %>%
+    mutate(respuesta = codificar_siono4o(as.character(respuesta)))          %>%
+    srvyr::group_by(sexo, respuesta)                                        %>%
+    srvyr::summarise(
+        total = survey_total(),
+        porcentaje = survey_mean(na.rm = T, vartype = "ci", level = 0.95))  %>%
+    mutate(tipo = v_tipod[1])
+
+for(i in 2:length(v_codes)){
+    
+    print(paste("Vuelta", i, "de", length(v_codes)))
+    
+    df_data_loop <- df_encuesta                                                 %>%
+        filter(discriminacion == "Sí")                                          %>%
+        rename(respuesta = v_codes[i])                                          %>%
+        select(sexo, respuesta)                                                 %>%
+        mutate(respuesta = codificar_siono4o(as.character(respuesta)))          %>%
+        srvyr::group_by(sexo, respuesta)                                        %>%
+        srvyr::summarise(
+            total = survey_total(),
+            porcentaje = survey_mean(na.rm = T, vartype = "ci", level = 0.95))  %>% 
+        mutate(tipo = v_tipod[i])
+    
+    df_data <- df_data %>% bind_rows(df_data_loop)
+}
+
+df_data <- df_data %>% 
+    filter(respuesta == "Sí")
+
+ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje))) +
+    geom_col(aes(fill = sexo))+ 
+    geom_label(aes(
+        label=paste0(round(porcentaje,3)*100, "%"), group = tipo),
+        position = position_stack(1), size=1.5, hjust=.5, vjust=.5, 
+        angle = 0, fill = "white",
+        color="black",  family = "Fira Sans") +
+    # Etiquetas
+    labs(
+        title    = v_title, 
+        subtitle = "Por sexo", 
+        x        = v_empty, 
+        y        = v_empty,
+        fill     = v_empty,
+        caption  = paste0("\n", v_caption)) +
+    # Tema 
+    tema +
+    guides(fill = "none") +
+    scale_fill_manual(values = v_colors_blue) +
+    scale_x_continuous(labels = scales::percent_format(), limits = c(0, 0.42)) +
+    scale_y_discrete(labels = scales::wrap_format(30)) +
+    theme(axis.text.x = element_text(angle = 0), 
+          plot.title = element_text(size = 12)) +
+    theme(axis.text.y = element_text(size = 5), 
+    ) +
+    facet_grid(~sexo)
+
+
+ggsave(
+    file = paste_figs("09_motivos_discriminación_personas_pp.png"), 
+    width = 6, height = 4, device = "png", type = "cairo")
+
+
+## 5.06. Violencia (P7_40) -----------------------------------------------------
 
 v_title <- "Situaciones de violencia experimentadas por\nlas personas en prisión preventiva en México"
 
@@ -538,7 +635,7 @@ ggsave(
     file = paste_figs("10_violencia_personas_pp.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
-## 5.7. Lugar donde reside la visita (P7_29) -----------------------------------
+## 5.07. Lugar donde reside la visita (P7_29) ----------------------------------
 
 v_title <- "Residencia de las personas que constantemente visitan a 
 las personas en prisión preventiva en México"
@@ -579,7 +676,7 @@ ggsave(
     file = paste_figs("11_residencia_personas_pp.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
-## 5.8. Gasto por visita -------------------------------------------------------
+## 5.08. Gasto por visita ------------------------------------------------------
 
 v_title <-  "Monto que gastan las personas por cada visita que realizan 
 a personas en prisión preventiva en México"
@@ -610,7 +707,6 @@ df_data <- df_encuesta                          %>%
                                    "Más de $5,000"
                                )))
 
-
 # Gráfica
 ggplot(df_data, aes(x = gasto_clas, y = porcentaje)) +
     geom_col(fill = "#4d4c7d") +
@@ -640,7 +736,7 @@ ggsave(
     file = paste_figs("12_gasto_visitas.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
 
-## 5.9. Ayuda proporcionada por la visita  (P7_28) -----------------------------
+## 5.09. Ayuda proporcionada por la visita  (P7_28) ----------------------------
 
 v_title <- "Artículos proporcionados por visitas a 
 las personas en prisión preventiva en México"
@@ -711,5 +807,171 @@ ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje))) +
 ggsave(
     file = paste_figs("13_articulos_visitas.png"), 
     width = 6, height = 4, device = "png", type = "cairo")
- 7
+ 
+## 5.10. Tiempos de espera sin sentencia ---------------------------------------
+
+df_tiempo <- df_encuesta                                                %>%
+    # Filtrar y dejar solo personas sin sentencias
+    srvyr::filter(!(P5_3 %in% c(3)))                                    %>% 
+    # Quitar personas que desconocen el año de la detención
+    srvyr::filter(
+        !(P3_5_A %in% c(0000, 9998, 9999)))                             %>% 
+    # Quitar personas que desconocen el mes de la detención
+    srvyr::filter(
+        !(P3_5_M %in% c(00, 98, 99)))                                   %>% 
+    # Estimar tiempo entre detención y sentencia 
+    srvyr::mutate(
+        # Fecha detención
+        fecha_detencion = paste(P3_5_A, P3_5_M, "01", sep = "-"),
+        fecha_detencion = as.Date(fecha_detencion, format = "%Y-%m-%d"), 
+        # Fecha sentencia
+        fecha_encuesta = as.Date("2021-07-01", format = "%Y-%m-%d"), 
+        # Tiempo de espera 
+        days  = as.numeric(
+            difftime(fecha_encuesta, fecha_detencion, units = "days")),
+        weeks = round(
+            as.numeric(difftime(fecha_encuesta, fecha_detencion, units = "weeks")))
+    ) %>% 
+    # Quitar casos donde la diferencia sea negativa 
+    srvyr::filter(days >= 0)
+
+# Guardar copia con nombre completo para procesamiento posterior
+df_tiempo_sin_sentencia <- df_tiempo
+
+# Guardar códigos de las variables de delitos por los que fueron detenidas (no sentenciadas)
+v_codes <- names(df_encuesta$variables %>% select(starts_with("P5_31_")))
+
+# Crear vectores con el nombre del delito 
+v_delitos <- c(
+    "Robo de vehículo",
+    "Robo a casa habitación",
+    "Robo a negocios",
+    "Robo en transporte público",
+    "Robo a transeúnte",
+    "Robo de autopartes",
+    "Otros robos",
+    "Posesión ilegal de drogas", 
+    "Comercio ilegal de drogas",
+    "Lesiones",
+    "Homicidio culposo",
+    "Homicidio doloso",
+    "Portación ilegal de armas",
+    "Incumplimiento de obl. de asistencia familiar",
+    "Violencia familiar",
+    "Daño a la propiedad",
+    "Secuestro",
+    "Violación",
+    "Fraude",
+    "Delincuencia organizada",
+    "Otros delitos sexuales",
+    "Extorsión",
+    "Privación de la libertad",
+    "Abuso de confianza",
+    "Amenazas",
+    "Otros delitos")
+
+# Ensayo 
+df_data <- df_tiempo                                                        %>% 
+    rename(code_delito = v_codes[1])                                        %>% 
+    mutate(code_delito = as.numeric(as.character(code_delito)))             %>% 
+    filter(code_delito == 1)                                                %>%
+    srvyr::summarise(   
+        mean_days = survey_mean(days))                                      %>% 
+    mutate(delito = v_delitos[1])    
+
+
+# Bucle
+for(i in 2:26){
+    print(paste("Vuelta", i, "de", 26))
+    
+    df_loop <- df_tiempo                                                    %>% 
+        rename(code_delito = v_codes[i])                                    %>% 
+        filter(code_delito == 1)                                            %>%
+        srvyr::summarise(
+            mean_days = survey_mean(days))                                  %>% 
+        mutate(delito = v_delitos[i])    
+    
+    df_data <- df_data %>% bind_rows(df_loop)
+}
+
+# -Robo (si se puede integrar una con todos los robos)
+# -Posesión ilegal de drogas
+# -Comercio ilegal de drogas
+# -Homicidio doloso
+# -Portación ilegal de armas
+# -Secuestro y secuestro exprés
+# -Delincuencia organizada
+
+# Limpieza final para la gráfica 
+v_delitos_interes <- c(
+    "Robo", "Posesión ilegal de drogas", "Comercio ilegal de drogas", 
+    "Homicidio doloso", "Portación ilegal de armas", "Secuestro", 
+    "Delincuencia organizada")
+
+df_plot <- df_data                                                          %>% 
+    mutate(delito = case_when(
+        str_detect(delito, "robo") | str_detect(delito, "Robo") ~ "Robo", 
+        T ~ delito))                                                        %>% 
+    filter(delito %in% v_delitos_interes) %>% 
+    group_by(delito) %>% 
+    summarise(mean_days = mean(mean_days)) %>% 
+    filter(!(delito %in% c("Posesión ilegal de drogas", "Robo")))
+
+# ---- Texto
+v_title <- "Las personas en prisión preventiva en México, 
+¿cuánto tiempo llevan esperando sentencia?"
+v_days  <- "\nDías de espera promedio, acumulados hasta el levantamiento de la ENPOL\n"
+
+# 
+
+# ---- Gráfica de barras
+ggplot(
+    # Datos
+    df_plot, 
+    aes(x = mean_days, y = reorder(delito, mean_days))) +
+    #Geoms
+    geom_col(fill = v_colors_blue[4]) +
+    geom_vline(xintercept = (365*1),   linetype = "dashed", color = "black", alpha = 0.2) +
+    geom_vline(xintercept = (365*2),   linetype = "dashed", color = "black", alpha = 0.2) +
+    geom_vline(xintercept = (365*3),   linetype = "dashed", color = "black", alpha = 0.7) +
+    geom_vline(xintercept = (365*4)+1, linetype = "dashed", color = "black", alpha = 0.2) +
+    geom_vline(xintercept = (365*5)+1, linetype = "dashed", color = "black", alpha = 0.2) +
+    geom_vline(xintercept = (365*6)+1, linetype = "dashed", color = "black", alpha = 0.2) +
+    geom_vline(xintercept = (365*7)+1, linetype = "dashed", color = "black", alpha = 0.2) +
+    geom_vline(xintercept = (365*8)+2, linetype = "dashed", color = "black", alpha = 0.2) +
+    annotate("text", x = -120+(365*1), y = 0.25, label = "1 año" , size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -120+(365*2), y = 0.25, label = "2 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -120+(365*3), y = 0.25, label = "3 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -50 +(365*4), y = 5.8 , label = "Tiempo promedio", size = 2.5, family = "Fira Sans", color = "black", alpha = 0.7) +
+    annotate("text", x = -120+(365*4), y = 0.25, label = "4 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -120+(365*5), y = 0.25, label = "5 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -120+(365*6), y = 0.25, label = "6 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -120+(365*7), y = 0.25, label = "7 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    annotate("text", x = -120+(365*8), y = 0.25, label = "8 años", size = 2.5, family = "Fira Sans", color = "#666666") +
+    geom_label(aes(label = scales::comma(round(mean_days))), size = 2, family = "Fira Sans") +
+    # Títulos 
+    labs(
+        title    = v_title, 
+        subtitle = "Por delito\n", 
+        x        = v_days, 
+        y        = v_empty,
+        fill     = v_empty,
+        caption  = v_caption
+    ) +
+    # Escalas
+    scale_x_continuous(
+        breaks = seq(0, 3000, 200), 
+        label = scales::comma_format()) +
+    scale_y_discrete(labels = scales::wrap_format(20))+
+    expand_limits(y = c(0, 6)) +
+    # Tema
+    tema +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+# ---- Guardar
+ggsave(
+    file = paste_figs("18_tiempo_sinsentencia.png"), 
+    width = 6, height = 4, device = "png", type = "cairo")
+
 # FIN. -------------------------------------------------------------------------
+♠
