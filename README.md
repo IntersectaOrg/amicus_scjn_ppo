@@ -12,7 +12,7 @@
 
 # Amicus curiae para la Acción de Inconstitucionalidad 130/2019 y para el Amparo en Revisión 355/2021 :scroll:
 
-En un esfuerzo por reforzar la transparencia y la reproducibiidad de la investigación, Intersecta hace público este repositorio que contiene los códigos con los que se generaron las figuras presentadas en el **Amicus curiae para la Acción de Inconstitucionalidad 130/2019 y para el Amparo en Revisión 355/2021**. 
+En un esfuerzo por reforzar la transparencia y la reproducibilidad de la investigación, Intersecta hace público este repositorio que contiene los códigos con los que se generaron las figuras presentadas en el **Amicus curiae para la Acción de Inconstitucionalidad 130/2019 y para el Amparo en Revisión 355/2021**. 
 
 La evidencia presentada para apoyar los argumentos del *Amicus* son resultado de más de dos años de trabajo que la organización ha realizado en torno a la figura de la _prisión preventiva oficiosa_ (PPO). 
 
