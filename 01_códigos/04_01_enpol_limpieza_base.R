@@ -1,139 +1,66 @@
 #------------------------------------------------------------------------------#
-# Proyecto:                   ENPOL 2021
-# Objetivo:                   Importar y unificar datos crudos de la ENPOL
+# Proyecto:              AMICUS para la SCJN sobre prisión preventiva oficiosa  
+# Objetivo:              Juntar bases la Encuesta Nacional de Población 
+#                        Privada de la Libertad (ENPOL) 2021
 #
-# Encargadas:                 Regina Isabel Medina
-# Correo:                     rmedina@intersecta.org
-# Fecha de creación:          12 de enero de 2022
-# Última actualización:       13 de junio de 2022
+# Encargadas:            Coordinación de datos de Intersecta
+# 
+# Fecha de creación:     12 de enero  de 2021 (códigos originales)
+# Última actualización:  31 de agosto de 2022 (código amicus)
 #------------------------------------------------------------------------------#
 
-# Fuente: https://www.inegi.org.mx/programas/enpol/2016/
-
-# URL Drive de los datos de la ENPOL2016 en el drive de  INTR:
-# - https://drive.google.com/drive/u/1/folders/1heccHThnKXTZkbVHNvxXFBREox-sZlUx
-
-
-# URL Drive de los datos de la ENPOL2016 en el drive de  INTR:
-# - https://drive.google.com/drive/u/1/folders/1SUjq9_9wAudhNbHaKi1AdGum95D8prAZ
-
-# Revisar unificación de base 2016
+# Fuente: https://www.inegi.org.mx/programas/enpol/2021/#Microdatos
 
 # 0. Configuración inicial -----------------------------------------------------
 
-# Silenciar mensajes de .group en dplyr
+# ---- Silenciar mensajes de .group en dplyr
 options(dplyr.summarise.inform = FALSE)
 
-# Cargar librerías 
+# ---- Cargar librerías 
 require(pacman)
 p_load(
-    foreign, readxl, googledrive, googlesheets4, tidyverse, dplyr, lubridate, 
-    zoo, beepr)
+    foreign, readxl, tidyverse, dplyr, lubridate, zoo, beepr)
 
-# Limpiar espacio de trabajo 
+# ---- Limpiar espacio de trabajo 
 rm(list=ls())
 
-# Establecer directorios
-inp         <- "02_datos_crudos/"
-out_data    <- "03_datos_limpios/"
-out_figs    <- "04_figuras/"
+# ---- Método para el caso de 1 UPM en los estratos
+options(survey.adjust.domain.lonely=TRUE)
+options(survey.lonely.psu="adjust")
 
+# ---- Funciones de directorios
+paste_code  <- function(x){paste0("01_códigos/04_enpol/"      , x)}
+paste_inp   <- function(x){paste0("02_datos_crudos/04_enpol/" , x)}
+paste_data  <- function(x){paste0("03_datos_limpios/04_enpol/", x)}
+paste_figs  <- function(x){paste0("04_figuras/"               , x)}
 
-# Activar las credenciales de google
-googledrive::drive_auth("rmedina@intersecta.org")
-googlesheets4::gs4_auth("rmedina@intersecta.org")
-
-# Verificar credenciales 
-googledrive::drive_user()
-googlesheets4::gs4_user() 
-
-# Función para importar de manera más corta desde drive
-# imp_dv <- function(x){
-#     googlesheets4::read_sheet(
-#         paste0("https://docs.google.com/spreadsheets/d/", x))}
-# 
 
 # 1. Cargar datos --------------------------------------------------------------
 
-## 1.1. ENPOL 2016 -------------------------------------------------------------
+## 1.1. ENPOL 2021 -------------------------------------------------------------
 
-#--- Importar ids de archivos de la carpeta de drive (última parte del URL)
-df_files <- drive_ls(as_id("1heccHThnKXTZkbVHNvxXFBREox-sZlUx")) 
-
-#df_files # Las bases .dbf corresponden a los elementos 2 al 7
-
-#--- Importar primera base de ENPOL2021 (prueba)
-# Crear archivo temporal 
-temp    <- tempfile(fileext = ".dbf") 
-
-# Descargar la base, desde el drive, al archivo temporal
-dl      <- drive_download(as_id(df_files$id[2]), path = temp, overwrite = TRUE)
-
-# Importar la base del archivo temporal a RStudio 
-df_raw  <- foreign::read.dbf(dl$local_path)
-
-
-#--- Importar bases en bucle 
-for(i in 2:7){
-    temp    <- tempfile(fileext = ".dbf")
-    dl      <- drive_download(as_id(df_files$id[i]), path = temp, overwrite = TRUE)
-    df_raw  <- foreign::read.dbf(dl$local_path)
-    assign(paste0("df_raw2016_", i), df_raw)
-}
-
-
-## 1.2. ENPOL 2021 -------------------------------------------------------------
-
-#--- Importar ids de archivos de la carpeta de drive (última parte del URL)
-df_files    <- drive_ls(as_id("1SUjq9_9wAudhNbHaKi1AdGum95D8prAZ")) 
-
-#--- Importar bases en bucle 
-for(i in 1:7){
-    temp    <- tempfile(fileext = ".dbf")
-    dl      <- drive_download(as_id(df_files$id[i]), path = temp, overwrite = TRUE)
-    df_raw  <- foreign::read.dbf(dl$local_path)
-    assign(paste0("df_raw2021_", i), df_raw)
-}
+# ---- Cargar todos los dbs
+df_raw2021_1 <- read.dbf(paste_inp("ENPOL2021_2_3.dbf"))
+df_raw2021_2 <- read.dbf(paste_inp("ENPOL2021_4.dbf"))
+df_raw2021_3 <- read.dbf(paste_inp("ENPOL2021_5.dbf"))
+df_raw2021_4 <- read.dbf(paste_inp("ENPOL2021_6.dbf"))
+df_raw2021_5 <- read.dbf(paste_inp("ENPOL2021_7.dbf"))
+df_raw2021_6 <- read.dbf(paste_inp("ENPOL2021_8_9_10_11.dbf"))
+df_raw2021_7 <- read.dbf(paste_inp("ENPOL2021_SOC.dbf"))
 
 
 # 2. Procesar datos ------------------------------------------------------------
 
-## 2.1. Unificación de bases 2016 ----------------------------------------------
+## 2.1. Unificar bases 2021 ----------------------------------------------------
 
-# Variables que conforman la llave personal 
-v_llave <- c("ID_PER", "CVE_ENT", "NOM_ENT", "CEN_INT", "NOM_INT", "RESUL_VIV", 
-             "SEXO", "FUERO")
-
-# Varibales muestrales 
-v_expansion     <- c("EST_DIS", "FPC", "FAC_PER")
-
-# Unir bases
-df_unida2016    <- df_raw2016_2                             %>% 
-    full_join(df_raw2016_3, by = c(v_llave, v_expansion))   %>% 
-    full_join(df_raw2016_4, by = c(v_llave, v_expansion))   %>% 
-    full_join(df_raw2016_5, by = c(v_llave, v_expansion))   %>% 
-    full_join(df_raw2016_6, by = c(v_llave, v_expansion))   %>% 
-    full_join(df_raw2016_7, by = c(v_llave, v_expansion))   %>%
-    mutate(year = 2016)
-
-dim(df_unida2016) # Las mismas 58,127 observaciones
-
-# Guardar gráfica unida 
-df_ENPOL_2016 <- df_unida2016 
-save(df_ENPOL_2016, file = paste0(out_data, "df_ENPOL_2016.RData"))
-# write_csv(df_ENPOL_2016, file = paste0(out_data, "df_ENPOL_2016.csv"))
-
-
-## 2.2. Unificación de bases 2021 ----------------------------------------------
-
-# Variables que conforman la llave personal 
+# ---- Variables que conforman la llave personal 
 v_llave         <- c("ID_PER" , "CVE_ENT", "NOM_ENT", "CEN_INT", 
                      "NOM_INT", "SEXO"   , "FUERO")
 
-# Varibales muestrales 
+# ---- Varibales muestrales 
 v_expansion     <- c("EST_DIS", "FPC", "FAC_PER")
 
-# Unir bases
+# ---- Unir bases
 df_unida2021    <- df_raw2021_1                             %>% 
     full_join(df_raw2021_2, by = c(v_llave, v_expansion))   %>% 
     full_join(df_raw2021_3, by = c(v_llave, v_expansion))   %>% 
@@ -145,15 +72,10 @@ df_unida2021    <- df_raw2021_1                             %>%
 
 dim(df_unida2021) # Las mismas 61,449 observaciones
 
-## 2.3. Codificar valores ------------------------------------------------------
-
-# load(paste0(out_data, "df_ENPOL_2021.RData"))
+## 2.2. Codificar valores ------------------------------------------------------
 
 
-
-# df_unida2021 <- df_ENPOL_2021
-
-# Codificar indicador de "delitos graves" que ameritan PPO 
+# ---- Codificar indicador de "delitos graves" que ameritan PPO 
 df_codificada <- df_unida2021                                           |> 
     # Cambiar formato de 
     mutate(across(starts_with("P5_11_"), ~as.numeric(as.character(.)))) |>
@@ -282,7 +204,6 @@ df_codificada <- df_unida2021                                           |>
             # ---- DEMÁS CASOS (no ameritan PPO)
             T ~ 0))
 
-
 # Controles de calidad
 # dim(df_codificada)
 # table(df_codificada$year_arresto)
@@ -291,11 +212,11 @@ df_codificada <- df_unida2021                                           |>
 
 # 3. Guardar datos -------------------------------------------------------------
 
-# Guardar gráfica unida 
+# ---- Guardar base unida 
 
 df_ENPOL_2021 <- df_codificada 
 
-save(df_ENPOL_2021, file = paste0(out_data, "df_ENPOL_2021.RData"))
+save(df_ENPOL_2021, file = paste_data("df_ENPOL_2021.RData"))
 
 # write_csv(df_ENPOL_2021, file = paste0(out_data, "df_ENPOL_2021.csv"))
 
