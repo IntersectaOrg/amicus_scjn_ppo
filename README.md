@@ -1,7 +1,7 @@
 ![Build Status](https://img.shields.io/github/stars/IntersectaOrg/amicus_scjn_ppo)
 
 <p align="center">
-<img src = "logo.png" alt="foo" width="300">
+<img src = "logo.jpg" alt="foo" width="300">
 </p> 
 
 
