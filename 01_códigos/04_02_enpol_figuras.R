@@ -1,12 +1,15 @@
 #------------------------------------------------------------------------------#
 # Proyecto:              AMICUS para la SCJN sobre prisión preventiva oficiosa  
 # Objetivo:              Procesar datos de la Encuesta Nacional de Población 
+#                        Privada de la Libertad (ENPOL) 2021
 #
 # Encargadas:            Coordinación de datos de Intersecta
 # 
-# Fecha de creación:     06 de diciembre de 2021
-# Última actualización:  31 de agosto de 2021
+# Fecha de creación:     06 de diciembre de 2021 (códigos originales)
+# Última actualización:  31 de agosto de 2021 (código amicus)
 #------------------------------------------------------------------------------#
+
+# Fuente: https://www.inegi.org.mx/programas/enpol/2021/#Microdatos
 
 # 0. Configuración inicial -----------------------------------------------------
 
@@ -47,7 +50,7 @@ load(paste_data("df_ENPOL_2021.RData"))
 
 # 2. Funciones -----------------------------------------------------------------
 
-## 2.1. Grupos edad ----------------------------------------------------
+## 2.1. Grupos edad ------------------------------------------------------------
 codificar_edad <- function(var = x){
     
     v_edad   <- c("18-24", "25-29", "30-34", "35-39", "40-44", "45-49",
@@ -118,7 +121,8 @@ codificar_ingresos <- function(var = x){
 ## 2.4. Servicios solicitados al Centro ----------------------------------------
 
 codificar_servicios <- function(var = x){
-    v_respuestas <- c("Sí", "No", "No lo he solicitado", "No sabe", "No responde")
+    v_respuestas <- c(
+        "Sí", "No", "No lo he solicitado", "No sabe", "No responde")
     
     case_when(
         var == "1" ~ v_respuestas[1],
@@ -132,7 +136,8 @@ codificar_servicios <- function(var = x){
 ## 2.5. Función para codificar lugar donde vive la visita ----------------------
 
 codificar_lugar <- function(var =x){
-    v_lugar <- c("Misma ciudad o localidad", "Mismo estado pero localidad diferente", 
+    v_lugar <- c("Misma ciudad o localidad", 
+                 "Mismo estado pero localidad diferente", 
                  "Otro estado", "Otro país", "Otros")
     case_when(
         var == "1" ~ v_lugar[1],
@@ -335,9 +340,11 @@ ggplot(df_data,
                                                  "Preescolar",
                                                  "Ninguno")))) +
     geom_col(fill = "#4d4c7d") +
-    geom_label(aes(label=paste0(round(porcentaje,3)*100, "%"), group = escolaridad),
-               position = position_stack(1), size=2, hjust=.5, vjust=.5, angle = 0, fill = "white",
-               color="black",  family = "Fira Sans") +
+    geom_label(
+        aes(label=paste0(round(porcentaje,3)*100, "%"), group = escolaridad),
+        position = position_stack(1), size=2, 
+        hjust=.5, vjust=.5, angle = 0, fill = "white",
+        color="black",  family = "Fira Sans") +
     # Etiquetas
     labs(
         title    = v_title, 
@@ -386,8 +393,10 @@ ggplot(df_data,
        # Coordenadas y geoms
        aes(x = porcentaje, y = ingresos)) +
     geom_col(aes(fill = sexo)) +
-    geom_label(aes(label=paste0(round(porcentaje,3)*100, "%"), group = ingresos),
-               position = position_stack(1), size=2, hjust=.5, vjust=.5, angle = 0, fill = "white",
+    geom_label(
+        aes(label=paste0(round(porcentaje,3)*100, "%"), group = ingresos),
+               position = position_stack(1), size=2, 
+               hjust=.5, vjust=.5, angle = 0, fill = "white",
                color="black",  family = "Fira Sans") +
     # Etiquetas
     labs(
@@ -400,7 +409,9 @@ ggplot(df_data,
     tema +
     guides(fill = "none") +
     scale_fill_manual(values = v_colors_blue) +
-    scale_x_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 0.3)) +
+    scale_x_continuous(
+        labels = scales::percent_format(accuracy = 1), 
+        limits = c(0, 0.3)) +
     scale_y_discrete(labels = scales::wrap_format(25)) +
     theme(axis.text.x = element_text(angle = 0),
           axis.title.x = element_text(angle = 0),
@@ -453,7 +464,9 @@ df_data <- df_data %>%
     filter(respuesta == "Sí")
 
 # Gráfica
-ggplot(df_data, aes(x = porcentaje, y = reorder(tipo, porcentaje), fill = "#118ab2")) +
+ggplot(
+    df_data, 
+       aes(x = porcentaje, y = reorder(tipo, porcentaje), fill = "#118ab2")) +
     geom_col(fill = "#4d4c7d")+ 
     geom_label(aes(
         label=paste0(round(porcentaje,3)*100, "%"), group = tipo),
@@ -485,13 +498,17 @@ v_title <- "Motivos por los que las personas en prisión preventiva
 han tenido problemas de trato diferente, rechazo o maltrato"
 
 
-v_codes <- c("P7_46_01", "P7_46_02", "P7_46_03", "P7_46_04", "P7_46_05", "P7_46_06", 
-             "P7_46_07", "P7_46_08", "P7_46_09", "P7_46_10", "P7_46_11", "P7_46_12",
-             "P7_46_13")
-v_tipod <- c("Edad", "Color de piel", "Otros rasgos físicos", "Enfermedad", "Discapacidad",
-             "Lengua o idioma", "Ser indígena o afrodescendiente", "Orientación sexual",
-             "Identidad de género", "Religión", "Situación económica", 
-             "Delito cometido", "Por haber pertenecido a las fuerzas armadas")
+v_codes <- c(
+    "P7_46_01", "P7_46_02", "P7_46_03", "P7_46_04", "P7_46_05", "P7_46_06", 
+    "P7_46_07", "P7_46_08", "P7_46_09", "P7_46_10", "P7_46_11", "P7_46_12",
+    "P7_46_13")
+
+v_tipod <- c(
+    "Edad", "Color de piel", "Otros rasgos físicos", "Enfermedad", 
+    "Discapacidad","Lengua o idioma", "Ser indígena o afrodescendiente",
+    "Orientación sexual","Identidad de género", "Religión", 
+    "Situación económica", "Delito cometido", 
+    "Por haber pertenecido a las fuerzas armadas")
 
 # ---- Por sexo
 
