@@ -20,8 +20,7 @@ options(dplyr.summarise.inform = FALSE) # Silenciar mensajes de .group en dplyr
 options(scipen=999)                     # Silenciar notación científica
 
 # ---- Librerías 
-pacman::p_load(
-    googledrive, googlesheets4, readr, readxl, tidyverse, janitor, ggrepel)
+pacman::p_load(readr, readxl, tidyverse, janitor, ggrepel)
 
 # ---- Limpiar espacio de trabajo 
 rm(list=ls())
@@ -35,8 +34,13 @@ paste_fig   <- function(x){paste0("04_figuras/"                                 
 
 # 1. Cargar datos --------------------------------------------------------------
 
+# ---- Serie histórica de población pe_nitenciaria
+df_pob <- readr::read_csv(paste_out("integrada_86_22_0622.csv"))
+
+# ---- Incidentes ocurridos en centros penitenciarios (incluidos decesos)
 load(paste_out("df_incidentes_sitjurid.RData"))
 load(paste_out("df_incidentes.RData"))
+
 
 # 2. Procesar datos ------------------------------------------------------------
 
@@ -45,8 +49,7 @@ df_sitjurid <- df_incidentes_sitjurid %>%
         estatus = case_when(
             str_detect(situacion, "Sentenciada") ~ "Con sentencia", 
             str_detect(situacion, "Procesada"  ) ~ "En prisión preventiva", 
-            T ~ "No especificado")
-    )
+            T ~ "No especificado"))
 
 unique(df_sitjurid$estatus)
 
@@ -81,7 +84,8 @@ v_rojos     <- c("#E23E57", "#88304E", "#522546", "#311D3F")
 v_azules    <- c("#E9D5DA", "#827397", "#4D4C7D", "#363062")
 
 
-## 3.1. Muertes por año total --------------------------------------------------
+## 3.1. Decesos ----------------------------------------------------------------
+## 3.1.1. Total por año --------------------------------------------------------
 
 df_year <- df_incidentes %>% 
     filter(evento == "Decesos")     %>% 
@@ -110,7 +114,7 @@ ggsave(paste_fig("08_decesos_ppl.png"),
        width = 6, height = 4)
 
 
-## 3.2. Muertes por estatus mensual --------------------------------------------
+## 3.1.2. Por estatus y mes ----------------------------------------------------
 
 # ---- Totales 
 
@@ -195,7 +199,7 @@ ggplot(
 #        width = 6, height = 4)
 
 
-## 3.2. Muertes por estatus anual ----------------------------------------------
+## 3.1.2. Por estatus y año ----------------------------------------------------
 
 df_data <- df_sitjurid                      %>% 
     filter(evento == "Decesos")             %>% 
@@ -238,5 +242,50 @@ ggplot(
 # ggsave(paste_fig("00_muertes_estatus_porcentajes_año.png"), 
 #        device = "png", type = "cairo", 
 #        width = 6, height = 4)
+
+
+## 3.2. PPO --------------------------------------------------------------------
+
+# ---- Procesar datos 
+df_data <- df_pob                                               %>% 
+    group_by(year, mes, estatus)                                %>% 
+    summarise(total = sum(total))                               %>% 
+    filter(estatus == "Sin sentencia")                          %>% 
+    mutate(fecha = as.Date(paste(year, mes, "01", sep = "-")))  
+    
+# ---- Graficar 
+ggplot(
+    # Datos
+    df_data %>% filter(fecha > as.Date("2016-05-01")),
+    # Coordenadas
+    aes(x = fecha, y = total, group = estatus)) +
+    # Geoms
+    geom_line(color = v_rojos[4], size = 1.5) +
+    geom_point(color = v_rojos[4], size = 0.7, alpha = 0.7) +
+    geom_vline(xintercept = as.Date("2019-04-12"), linetype = "dashed", 
+               color = v_rojos[2]) +
+    # Anotaciones 
+    annotate("text", x = as.Date("2019-06-01"), y = 95000, 
+             label = "Aprobación de la\nreforma constitucional\npara ampliar la\nprisión preventiva oficiosa", 
+             size = 2, family = "Fira Sans", color = "#666666", hjust = 0) +
+    # Etiquetas
+    labs(
+        title = "¿Cuántas personas había en prisión preventiva en México?", 
+        subtitle = "Por mes, desde junio de 2016 hasta junio de 2022\n", 
+        x = "", 
+        y = "Total de personas\n", 
+        caption = "Fuente: Cuaderno mensual de información estadística penitenciaria nacional. 
+        Datos procesados por Intersecta (intersecta.org)."
+    ) +
+    # Escalas
+    scale_x_date() +
+    scale_y_continuous(label = scales::comma_format()) +
+    # Tema
+    tema
+
+ggsave(paste_fig("14_personas_en_pp_cuadernos.png"), 
+       device = "png", type = "cairo", 
+       width = 6, height = 4)
+
 
 # FIN. -------------------------------------------------------------------------
