@@ -260,7 +260,7 @@ ggplot(
     # Coordenadas
     aes(x = fecha, y = total, group = estatus)) +
     # Geoms
-    geom_line(color = v_rojos[4], size = 1.5) +
+    geom_line(color = v_rojos[4], size = 1) +
     geom_point(color = v_rojos[4], size = 0.7, alpha = 0.7) +
     geom_vline(xintercept = as.Date("2019-04-12"), linetype = "dashed", 
                color = v_rojos[2]) +
@@ -280,8 +280,10 @@ ggplot(
     # Escalas
     scale_x_date() +
     scale_y_continuous(label = scales::comma_format()) +
+    scale_x_date(date_labels="%Y-%m", date_breaks = "1 month", expand=c(.01,.01)) +
     # Tema
-    tema
+    tema +
+    theme(axis.text.x = element_text(angle = 90))
 
 ggsave(paste_fig("14_personas_en_pp_cuadernos.png"), 
        device = "png", type = "cairo", 
